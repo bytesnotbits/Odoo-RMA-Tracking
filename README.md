@@ -48,3 +48,59 @@ Component 3.2: The Server Action (The Logic)
   Paste the Python code below into the code editor.
   Click Save.
   Crucially, click the "Create Contextual Action" button after saving. This makes the action available to the UI.
+
+Component 3.3: The UI Button (The Trigger)
+
+- Purpose: To provide a user-friendly, one-click method to run the Server Action.
+- Recreation Steps (Using Studio):
+  
+  Navigate to a transfer document (Inventory > Operations > Transfers) and enter Studio.
+  Go to the "Buttons" tab and click "Add a button".
+  Configure the button properties:
+  
+  Button Text: Create Return RMA
+  Use Existing Action: Check this box.
+  Action: Select the Create and Link Return RMA server action.
+  
+  
+  Configure the "Invisible" attribute with the following domain rules, ensuring the logic is set to "Match any of the following rules:" (OR logic).
+  
+  Rule 1: [ "Related RMA", "is set" ]
+  Rule 2: [ "Operation Type", "is not", "RMA(out)" ]
+  Rule 3: [ "Status", "is not", "Done" ]
+  
+  
+  Close Studio to save the view changes.
+  
+---
+
+Summary Report for Developer
+
+Feature: On-Demand RMA Return Creation
+Objective: To create a linked RMA(in) transfer from a validated RMA(out) transfer via a user-controlled button, without affecting the Purchase module.
+Components Created:
+1. Custom Field (via Studio):
+   Model: stock.picking
+   Name: x_studio_related_rma
+   Type: Many2one
+   Relation: stock.picking
+   
+2. Server Action:
+   Name: Create and Link Return RMA
+   Model: stock.picking
+   Type: Execute Python Code
+   Code: [See Python code block above]
+   
+3. UI Modification (via Studio):
+   View Modified: stock.picking form view.
+   Element: A new <button> has been added to the header.
+   Button Label: Create Return RMA
+   Action Called: Create and Link Return RMA (Server Action)
+   Visibility Domain (attrs="{'invisible': ...}"): The button is hidden if ANY of the following are true:
+   
+   x_studio_related_rma is not False.
+   picking_type_id.name is not 'RMA(out)'.
+   state is not 'done'.
+   
+   
+   Domain String: [ "|", "|", ("x_studio_related_rma", "!=", False), ("picking_type_id.name", "!=", "RMA(out)"), ("state", "!=", "done") ]
